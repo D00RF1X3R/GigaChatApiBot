@@ -8,6 +8,7 @@ class UsersOrm(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str]
     admin: Mapped[bool | None]
     banned: Mapped[bool]
 

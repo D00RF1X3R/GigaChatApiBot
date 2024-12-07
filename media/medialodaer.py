@@ -4,7 +4,6 @@ from os import listdir
 
 async def load_files(bot):
     files = listdir("media/files")
-    print(files)
     fin = []
     for i in files:
         file = FSInputFile(f"media/files/{i}")
