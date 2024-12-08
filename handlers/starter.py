@@ -15,6 +15,7 @@ from states.authortab import FSMAuthor
 
 from lexicon.lexicon import LEXICON
 from keyboards.starter import keyboard
+from keyboards.prerewritekb import pre_rewrite_kb
 
 from database.orm import insert_data, check_user
 
@@ -61,8 +62,8 @@ async def leave_author(message: Message, state: FSMContext):
 
 @router.message(lambda message: message.text == "Начать рерайтинг", StateFilter(default_state))
 async def rewrite(message: Message, state: FSMContext):
-    await state.set_state(FSMRewrite.rewriting)
-    await message.answer(text="Поехали!")
+    await state.set_state(FSMRewrite.pre_rewrite)
+    await message.answer(text="Выберите действие", reply_markup=pre_rewrite_kb)
     logger.info("Начало рерайта")
 
 

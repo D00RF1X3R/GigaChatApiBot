@@ -13,7 +13,7 @@ from keyboards.rewritingkb import (single_inline_kb, left_inline_kb,
                                    right_inline_kb, double_inline_kb, RewrittenCallbackFactory)
 from services.gigachatapi import ask
 
-from database.orm import insert_rewritten_text
+from database.orm import insert_rewritten_text, check_text
 
 router = Router()
 
@@ -44,9 +44,13 @@ async def working_with_old_one(message: Message):
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 1), StateFilter(FSMRewrite.rewrote))
 async def process_save(callback: CallbackQuery):
-    await insert_rewritten_text(callback.from_user.id, callback.message.text)
-    logger.info("Текст пользователя сохранен.")
-    await callback.answer()
+    if not (await check_text(callback.from_user.id, callback.message.text)):
+        await insert_rewritten_text(callback.from_user.id, callback.message.text)
+        await callback.answer("Успешно сохранено")
+        logger.info("Текст пользователя сохранен.")
+    else:
+        await callback.answer("Такая перепись уже есть")
+
 
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 2), StateFilter(FSMRewrite.rewrote))
