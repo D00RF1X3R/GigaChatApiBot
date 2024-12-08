@@ -6,18 +6,20 @@ from aiogram import Router, types, F
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, PreCheckoutQuery, ContentType, SuccessfulPayment
+from aiogram.types import Message, PreCheckoutQuery, ContentType
 
 from aiogram_dialog import DialogManager
 
 from states.rewriting import FSMRewrite
 from states.authortab import FSMAuthor
+from states.admin import FSMAdmin
 
 from lexicon.lexicon import LEXICON
-from keyboards.starter import keyboard
+from keyboards.starter import keyboard, admin_kb
 from keyboards.prerewritekb import pre_rewrite_kb
+from keyboards.admin import admin_tab_kb
 
-from database.orm import insert_data, check_user
+from database.orm import insert_data, check_user, make_admin
 
 router = Router()
 
@@ -25,13 +27,25 @@ logger = logging.getLogger(__name__)
 
 
 @router.message(CommandStart(), StateFilter(default_state))
-async def process_start_command(message: Message):
+async def process_start_command(message: Message, user):
     if await check_user(message.from_user.id):
         logger.info(f"Пользователь {message.from_user.username} уже есть в базе.")
+        if user == "admin":
+            await make_admin(message.from_user.id)
+            await message.answer(text=LEXICON['/start'] + "\nВы админ!!!", reply_markup=admin_kb)
+        else:
+            await message.answer(text=LEXICON['/start'], reply_markup=keyboard)
     else:
         await insert_data(message.from_user.id, message.from_user.username)
         logger.info(f"Пользователь {message.from_user.id} создан.")
-    await message.answer(text=LEXICON['/start'], reply_markup=keyboard)
+        await message.answer(text=LEXICON['/start'], reply_markup=keyboard)
+
+
+@router.message(lambda message: message.text == "Админка", StateFilter(default_state))
+async def process_admin(message: Message, user, state: FSMContext):
+    if user == "admin":
+        await state.set_state(FSMAdmin.admin)
+        await message.answer(text=LEXICON["admin_greet"], reply_markup=admin_tab_kb)
 
 
 @router.message(lambda message: message.text == "Помощь", StateFilter(default_state))
@@ -54,16 +68,19 @@ async def process_author(message: Message, state: FSMContext, dialog_manager: Di
 
 
 @router.message(StateFilter(FSMAuthor.in_author_tab))
-async def leave_author(message: Message, state: FSMContext):
+async def leave_author(message: Message, state: FSMContext, user):
     await state.clear()
-    await message.answer(text=LEXICON['greeting'], reply_markup=keyboard)
+    if user == "admin":
+        await message.answer(text=LEXICON["admin_greet"], reply_markup=admin_kb)
+    else:
+        await message.answer(text=LEXICON["greeting"], reply_markup=keyboard)
     logger.info("Уход от авторов")
 
 
 @router.message(lambda message: message.text == "Начать рерайтинг", StateFilter(default_state))
 async def rewrite(message: Message, state: FSMContext):
     await state.set_state(FSMRewrite.pre_rewrite)
-    await message.answer(text="Выберите действие", reply_markup=pre_rewrite_kb)
+    await message.answer(text=LEXICON['split'], reply_markup=pre_rewrite_kb)
     logger.info("Начало рерайта")
 
 

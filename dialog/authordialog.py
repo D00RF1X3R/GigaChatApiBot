@@ -16,12 +16,12 @@ from database.orm import get_media_id_from_bd
 
 from lexicon.lexicon import LEXICON
 
-from keyboards.starter import keyboard
+from keyboards.starter import keyboard, next_kb
 
 
 async def on_click(callback: CallbackQuery, button: Button, manager: DialogManager):
     await manager.done()
-    await callback.message.answer(text=LEXICON['leave_author'], reply_markup=ReplyKeyboardRemove())
+    await callback.message.answer(text=LEXICON['leave_author'], reply_markup=next_kb)
 
 
 async def get_social(dialog_manager: DialogManager, **kwargs):
@@ -79,15 +79,15 @@ async def get_social(dialog_manager: DialogManager, **kwargs):
 
 
 socials_kbd = Radio(
-    Format("[X] {item[0]}"),
-    Format("[ ] {item[0]}"),
+    Format("🔴 {item[0]}"),
+    Format("⚪ {item[0]}"),
     id="r_socials",
     item_id_getter=operator.itemgetter(1),
     items="socials",
 )
 
 text = Format(
-    "Я - создатель бота, больше о моих соцсетях можно узнать ниже, нажав на чекбокс!. \n\n"
+    "Я - создатель бота, больше о моих соцсетях можно узнать ниже, нажав на чекбокс! \n\n"
 )
 
 author_tab = Dialog(

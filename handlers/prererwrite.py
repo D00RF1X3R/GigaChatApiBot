@@ -10,7 +10,7 @@ from states.rewriting import FSMRewrite
 
 from keyboards.prerewritekb import pre_rewrite_kb
 from keyboards.historykb import left_inline_kb, right_inline_kb, double_inline_kb, HistoryCallbackFactory, cross_kb
-from keyboards.starter import keyboard
+from keyboards.starter import keyboard, admin_kb
 
 from lexicon.lexicon import LEXICON
 
@@ -28,9 +28,12 @@ async def process_rewriting(message: Message, state: FSMContext):
 
 
 @router.message(lambda message: message.text == "Вернуться в начало", StateFilter(FSMRewrite.pre_rewrite))
-async def process_leave(message: Message, state: FSMContext):
+async def process_leave(message: Message, state: FSMContext, user):
     await state.clear()
-    await message.answer(text=LEXICON["greeting"], reply_markup=keyboard)
+    if user == "admin":
+        await message.answer(text=LEXICON["admin_greet"], reply_markup=admin_kb)
+    else:
+        await message.answer(text=LEXICON["greeting"], reply_markup=keyboard)
     logger.info("Пользователь вышел из истории переписей.")
 
 
@@ -104,9 +107,12 @@ async def process_remove_variant(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(HistoryCallbackFactory.filter(F.next_move == 0), StateFilter(FSMRewrite.history))
-async def process_cancel(callback: CallbackQuery, state: FSMContext):
+async def process_cancel(callback: CallbackQuery, state: FSMContext, user):
     await callback.message.edit_reply_markup(None)
     await state.clear()
-    await callback.message.answer(text=LEXICON["greeting"], reply_markup=keyboard)
+    if user == "admin":
+        await callback.message.answer(text=LEXICON["admin_greet"], reply_markup=admin_kb)
+    else:
+        await callback.message.answer(text=LEXICON["greeting"], reply_markup=keyboard)
     await callback.answer()
     logger.info("Пользователь вышел из истории переписей.")

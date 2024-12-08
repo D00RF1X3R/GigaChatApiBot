@@ -4,10 +4,13 @@ import logging
 from aiogram_dialog import setup_dialogs
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from handlers import rewrite, starter, prererwrite
+from handlers import rewrite, starter, prererwrite, admin
 
-from database.orm import insert_data, create_tables, add_media_to_db
+from database.orm import create_tables, add_media_to_db
 from config_data.config import config
+
+from middlewares.inner import AdminMiddleware
+from middlewares.outer import BanMiddleware
 
 from dialog import authordialog
 
@@ -31,8 +34,8 @@ async def main():
     dp["giga_key"] = config.giga.key
     dp["prov_token"] = config.tg_bot.prov_token
 
-    ans = input("Хотите ли вы создать новые таблицы?\n 1 - да, 2 - нет \n?: ")
-    if ans == '1':
+    clear_database = False  # ОЧИСТКА И СОЗДАНИЕ БД
+    if clear_database:
         await create_tables()
         logger.info("Таблицы сделаны.")
 
@@ -44,6 +47,10 @@ async def main():
     dp.include_router(starter.router)
     dp.include_router(rewrite.router)
     dp.include_router(prererwrite.router)
+    dp.include_router(admin.router)
+
+    dp.update.middleware(AdminMiddleware())
+    dp.update.outer_middleware(BanMiddleware())
 
     dp.include_router(authordialog.author_tab)
     setup_dialogs(dp)

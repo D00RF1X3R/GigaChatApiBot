@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update, values
 
 from database.database import async_session_factory as sf, engine, Base
 from database.models import UsersOrm, RewritesOrm, MediaOrm
@@ -55,6 +55,53 @@ async def select_user(user_id):
         user = res.scalars().all()[0]
         logging.info("Пользователь найден")
         return user
+
+
+async def get_users(banned=False):
+    async with sf() as session:
+        query = select(UsersOrm).where(UsersOrm.banned == banned)
+        res = (await session.execute(query)).scalars().all()
+        if len(res) > 0:
+            fin = {}
+            for i in res:
+                fin[i.id] = i.username
+            return fin
+        else:
+            return False
+
+
+async def get_counts():
+    async with sf() as session:
+        query = select(UsersOrm)
+        t_query = select(RewritesOrm)
+        users_count = (await session.execute(query)).scalars().all()
+        texts_count = (await session.execute(t_query)).scalars().all()
+        return [len(users_count), len(texts_count)]
+
+
+async def check_user_ban(user_id):
+    async with sf() as session:
+        query = select(UsersOrm).where(UsersOrm.id == user_id)
+        res = (await session.execute(query)).scalars().all()
+        if len(res) == 1:
+            return res[0].banned
+        else:
+            return False
+
+
+async def user_state(user_id, ban=False):
+    async with sf() as session:
+        user_id = int(user_id)
+        query = update(UsersOrm).where(UsersOrm.banned != ban and UsersOrm.id == user_id).values(banned=ban)
+        await session.execute(query)
+        await session.commit()
+
+
+async def make_admin(user_id):
+    async with sf() as session:
+        query = update(UsersOrm).where(UsersOrm.id == user_id).values(admin=True)
+        await session.execute(query)
+        await session.commit()
 
 
 async def insert_rewritten_text(user_id, text):
