@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+from aiogram.client.session.aiohttp import AiohttpSession
+
 from aiogram_dialog import setup_dialogs
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -27,9 +29,11 @@ async def main():
     logger = logging.getLogger(__name__)
     logger.info("Логгер запущен!")
 
+    session = AiohttpSession(proxy="http://proxy.server:3128")
+
     storage = MemoryStorage()
 
-    bot = Bot(token=config.tg_bot.token)
+    bot = Bot(token=config.tg_bot.token, session=session)
     dp = Dispatcher(storage=storage)
     dp["giga_key"] = config.giga.key
     dp["prov_token"] = config.tg_bot.prov_token
