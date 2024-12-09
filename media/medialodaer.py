@@ -4,7 +4,7 @@ from os import listdir
 from config_data.config import config
 
 
-async def load_files(bot):
+async def load_files(bot):  # Загрузка файлов аватарок автора
     files = listdir("media/files")
     fin = []
     for i in files:

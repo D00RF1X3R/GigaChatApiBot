@@ -5,22 +5,22 @@ from environs import Env
 @dataclass
 class TgBot:
     token: str  # Токен для доступа к телеграм-боту
-    prov_token: str
-    admin_id: int
+    prov_token: str  # Токен для донатов
+    admin_id: int  # ID админа
 
 
 @dataclass
 class GigaBot:
-    key: str
+    key: str  # Ключ авторизации бота
 
 
 @dataclass
 class DataBase:
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_PASS: str
-    DB_NAME: str
+    DB_HOST: str  # Хост БД
+    DB_PORT: int  # Порт БД, искать в документации конкретной БД
+    DB_USER: str  # Имя пользователя БД
+    DB_PASS: str  # Пароль пользователя
+    DB_NAME: str  # Название БД
 
     def url(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
@@ -33,7 +33,7 @@ class Config:
     db: DataBase
 
 
-def load_config(path: str | None = None) -> Config:
+def load_config(path: str | None = None) -> Config:  # Функция загрузки пользователя
     env = Env()
     env.read_env(path)
     return Config(tg_bot=TgBot(token=env('BOT_TOKEN'), prov_token=env('PROVIDER_TOKEN'), admin_id=env('ADMIN_ID')),

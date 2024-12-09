@@ -9,7 +9,7 @@ class AdminCallbackFactory(CallbackData, prefix='admin_tab'):
     nick: str | None
 
 
-def build_kb(users):
+def build_kb(users):  # Функция построения списка пользователей
     builder = InlineKeyboardBuilder()
     if len(users) <= 100:
         for i in users:

@@ -19,6 +19,8 @@ from lexicon.lexicon import LEXICON
 from keyboards.starter import keyboard, next_kb
 
 
+# За всей информацией об aiogram-dialog в документацию, сдесь всё реализовано плохо.
+
 async def on_click(callback: CallbackQuery, button: Button, manager: DialogManager):
     await manager.done()
     await callback.message.answer(text=LEXICON['leave_author'], reply_markup=next_kb)

@@ -20,23 +20,24 @@ logger = logging.getLogger(__name__)
 
 
 @router.callback_query(AdminCallbackFactory.filter(F.next_move == 0), StateFilter(FSMAdmin.admin))
-async def process_cancel(callback: CallbackQuery, state: FSMContext):
+async def process_cancel(callback: CallbackQuery, state: FSMContext):  # Выход мз админки
     await callback.message.edit_reply_markup(None)
     await state.clear()
     await callback.message.answer(text=LEXICON["admin_greet"], reply_markup=admin_kb)
     await callback.answer()
-    logger.info("Пользователь вышел из истории переписей.")
+    logger.info("Пользователь вышел из админки.")
 
 
 @router.callback_query(AdminCallbackFactory.filter(F.next_move == 0), StateFilter(FSMAdmin.banned_users))
 @router.callback_query(AdminCallbackFactory.filter(F.next_move == 0), StateFilter(FSMAdmin.users))
-async def process_back(callback: CallbackQuery, state: FSMContext):
+async def process_back(callback: CallbackQuery, state: FSMContext):  # Выход из списка пользователей
     await state.set_state(FSMAdmin.admin)
     await callback.message.edit_text(text=LEXICON["admin_greet"], reply_markup=admin_tab_kb)
+    logger.info("Пользователь вышел из списка пользователей.")
 
 
 @router.callback_query(AdminCallbackFactory.filter(~F.next_move), StateFilter(FSMAdmin.users))
-async def ban_user(callback: CallbackQuery, callback_data: AdminCallbackFactory, state: FSMContext):
+async def ban_user(callback: CallbackQuery, callback_data: AdminCallbackFactory, state: FSMContext):  # Бан пользователя
     await user_state(callback_data.id, ban=True)
     res = await get_users()
     if res:
@@ -49,7 +50,8 @@ async def ban_user(callback: CallbackQuery, callback_data: AdminCallbackFactory,
 
 
 @router.callback_query(AdminCallbackFactory.filter(~F.next_move), StateFilter(FSMAdmin.banned_users))
-async def unban_user(callback: CallbackQuery, callback_data: AdminCallbackFactory, state: FSMContext):
+async def unban_user(callback: CallbackQuery, callback_data: AdminCallbackFactory,
+                     state: FSMContext):  # Разбан пользователя
     await user_state(callback_data.id)
     res = await get_users(banned=True)
     if res:
@@ -62,7 +64,8 @@ async def unban_user(callback: CallbackQuery, callback_data: AdminCallbackFactor
 
 
 @router.callback_query(AdminCallbackFactory.filter(F.next_move == 1), StateFilter(FSMAdmin.admin))
-async def process_ban_users(callback: CallbackQuery, callback_data: AdminCallbackFactory, state: FSMContext):
+async def process_ban_users(callback: CallbackQuery, callback_data: AdminCallbackFactory,
+                            state: FSMContext):  # Переход в окно незабаненных пользователей
     res = await get_users()
     if res:
         await state.set_state(FSMAdmin.users)
@@ -73,7 +76,8 @@ async def process_ban_users(callback: CallbackQuery, callback_data: AdminCallbac
 
 
 @router.callback_query(AdminCallbackFactory.filter(F.next_move == 2), StateFilter(FSMAdmin.admin))
-async def process_unban_users(callback: CallbackQuery, callback_data: AdminCallbackFactory, state: FSMContext):
+async def process_unban_users(callback: CallbackQuery, callback_data: AdminCallbackFactory,
+                              state: FSMContext):  # Переход в окно забаненных пользователей
     res = await get_users(banned=True)
     if res:
         await state.set_state(FSMAdmin.banned_users)
@@ -84,7 +88,7 @@ async def process_unban_users(callback: CallbackQuery, callback_data: AdminCallb
 
 
 @router.callback_query(AdminCallbackFactory.filter(F.next_move == 3), StateFilter(FSMAdmin.admin))
-async def process_counters(callback: CallbackQuery, state: FSMContext):
+async def process_counters(callback: CallbackQuery, state: FSMContext):  # Получить счетчики пользователей и рерайтов
     res = await get_counts()
     await callback.answer(f"Количество пользователей: {res[0]}\n"
                           f"Количество переписей: {res[1]}")

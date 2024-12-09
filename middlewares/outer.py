@@ -11,7 +11,7 @@ from database.orm import check_user_ban
 logger = logging.getLogger(__name__)
 
 
-class BanMiddleware(BaseMiddleware):
+class BanMiddleware(BaseMiddleware):  # Миддлварь проверки забаненных пользователей
     async def __call__(self, handler, event, data):
         user: User = data.get('event_from_user')
         logger.info("Отработала миддлварь на забаненных пользователей.")

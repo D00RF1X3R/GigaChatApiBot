@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database.database import Base
 
 
-class UsersOrm(Base):
+class UsersOrm(Base):  # Таблица пользователей
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -13,7 +13,7 @@ class UsersOrm(Base):
     banned: Mapped[bool]
 
 
-class RewritesOrm(Base):
+class RewritesOrm(Base):  # Таблица рерайтов
     __tablename__ = "rewrites"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -22,7 +22,7 @@ class RewritesOrm(Base):
     user: Mapped[str] = relationship(UsersOrm, cascade="all, delete", backref="children")
 
 
-class MediaOrm(Base):
+class MediaOrm(Base):  # Таблица медиа
     __tablename__ = "media"
 
     name: Mapped[str] = mapped_column(primary_key=True)

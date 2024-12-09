@@ -9,7 +9,7 @@ from config_data.config import config
 logger = logging.getLogger(__name__)
 
 
-class AdminMiddleware(BaseMiddleware):
+class AdminMiddleware(BaseMiddleware):  # Миддлварь проверки на админа
     async def __call__(self, handler, event, data):
         user: User = data.get('event_from_user')
         if user is not None:

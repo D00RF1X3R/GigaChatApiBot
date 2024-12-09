@@ -13,6 +13,6 @@ class Base(DeclarativeBase):
 engine = create_async_engine(
     url=config.db.url(),
     echo=False,
-)
+)  # Ядро базы данных
 
 async_session_factory = async_sessionmaker(engine)

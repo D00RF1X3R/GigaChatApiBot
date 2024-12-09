@@ -37,6 +37,8 @@ button_right = InlineKeyboardButton(
     callback_data=RewrittenCallbackFactory(next_move=5).pack()
 )
 
+# Клавиатуры для повторного рерайта
+
 single_inline_kb = InlineKeyboardMarkup(inline_keyboard=[[button_save], [button_re_rewrite, button_rewrite_another],
                                                          [button_back]])
 

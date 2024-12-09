@@ -20,15 +20,15 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 
-@router.message(lambda message: message.text == "Начать перепись", StateFilter(FSMRewrite.pre_rewrite))
-async def process_rewriting(message: Message, state: FSMContext):
+@router.message(lambda message: message.text == "Начать рерайт", StateFilter(FSMRewrite.pre_rewrite))
+async def process_rewriting(message: Message, state: FSMContext):  # Начать рерайт
     await state.set_state(FSMRewrite.rewriting)
     await message.answer(text='Напишите то, что хотели бы переписать', reply_markup=ReplyKeyboardRemove())
     logger.info("Пользователь вошел в меню переписей.")
 
 
 @router.message(lambda message: message.text == "Вернуться в начало", StateFilter(FSMRewrite.pre_rewrite))
-async def process_leave(message: Message, state: FSMContext, user):
+async def process_leave(message: Message, state: FSMContext, user):  # Возврат к началу
     await state.clear()
     if user == "admin":
         await message.answer(text=LEXICON["admin_greet"], reply_markup=admin_kb)
@@ -37,8 +37,8 @@ async def process_leave(message: Message, state: FSMContext, user):
     logger.info("Пользователь вышел из истории переписей.")
 
 
-@router.message(lambda message: message.text == "История переписей", StateFilter(FSMRewrite.pre_rewrite))
-async def process_rewrite_history(message: Message, state: FSMContext):
+@router.message(lambda message: message.text == "История рерайтов", StateFilter(FSMRewrite.pre_rewrite))
+async def process_rewrite_history(message: Message, state: FSMContext):  # Переход в страницу истории рерайтов
     await state.set_state(FSMRewrite.history)
     res = await get_rewrites(message.from_user.id)
     await state.update_data({"curr_var": 0})
@@ -47,19 +47,19 @@ async def process_rewrite_history(message: Message, state: FSMContext):
         await message.answer(text=res[0], reply_markup=right_inline_kb)
     else:
         await state.set_state(FSMRewrite.pre_rewrite)
-        await message.answer(text='У вас пока нет переписей.', reply_markup=pre_rewrite_kb)
-    logger.info("Пользователь вошел в историю переписей.")
+        await message.answer(text='У вас пока нет рерайтов.', reply_markup=pre_rewrite_kb)
+    logger.info("Пользователь вошел в историю рератов.")
 
 
 @router.message(lambda message: message.text == "Удалить историю", StateFilter(FSMRewrite.pre_rewrite))
 async def process_history_clean(message: Message):
     await remove_all_rewrites(message.from_user.id)
-    await message.answer(text='История переписей очищена.', reply_markup=pre_rewrite_kb)
-    logger.info("Пользователь очистил историю переписей.")
+    await message.answer(text='История рерайтов очищена.', reply_markup=pre_rewrite_kb)
+    logger.info("Пользователь очистил историю рерайтов.")
 
 
 @router.callback_query(HistoryCallbackFactory.filter(F.next_move == 2), StateFilter(FSMRewrite.history))
-async def process_right_arrow(callback: CallbackQuery, state: FSMContext):
+async def process_right_arrow(callback: CallbackQuery, state: FSMContext):  # Обработка стрелки вправо
     curr_var = (await state.get_data())["curr_var"]
     variants = (await state.get_data())["variants"]
     if curr_var + 1 == len(variants) - 1:
@@ -73,7 +73,7 @@ async def process_right_arrow(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(HistoryCallbackFactory.filter(F.next_move == 1), StateFilter(FSMRewrite.history))
-async def process_left_arrow(callback: CallbackQuery, state: FSMContext):
+async def process_left_arrow(callback: CallbackQuery, state: FSMContext):  # Обработка стрелки влево
     curr_var = (await state.get_data())["curr_var"]
     variants = (await state.get_data())["variants"]
     if curr_var - 1 == 0:
@@ -87,7 +87,7 @@ async def process_left_arrow(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(HistoryCallbackFactory.filter(F.next_move == 3), StateFilter(FSMRewrite.history))
-async def process_remove_variant(callback: CallbackQuery, state: FSMContext):
+async def process_remove_variant(callback: CallbackQuery, state: FSMContext):  # Обработка кнопки удаления рерайта
     curr_var = (await state.get_data())["curr_var"]
     variants = (await state.get_data())["variants"]
     await remove_rewrite(callback.from_user.id, variants[curr_var])
@@ -107,7 +107,7 @@ async def process_remove_variant(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(HistoryCallbackFactory.filter(F.next_move == 0), StateFilter(FSMRewrite.history))
-async def process_cancel(callback: CallbackQuery, state: FSMContext, user):
+async def process_cancel(callback: CallbackQuery, state: FSMContext, user):  # Обработка кнопки выхода из истории
     await callback.message.edit_reply_markup(None)
     await state.clear()
     if user == "admin":

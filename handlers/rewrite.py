@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.message(StateFilter(FSMRewrite.rewriting))
-async def chat(message: Message, giga_key, state: FSMContext):
+async def chat(message: Message, giga_key, state: FSMContext):  # Обработка текста и запрос к гигачату
     res = await ask(message.text, giga_key)
     if res in BAD_LEXICON:
         await message.answer(text="Ваше сообщение содержит недопустимую информацию.",
@@ -37,24 +37,23 @@ async def chat(message: Message, giga_key, state: FSMContext):
 
 
 @router.message(StateFilter(FSMRewrite.rewrote))
-async def working_with_old_one(message: Message):
+async def working_with_old_one(message: Message):  # Оповещение о незавершенной работе с текстом
     logger.info("Пользователь не завершил работу с прошлым текстом.")
-    await message.answer(text="Сначала закончите работу с прошлой переписью.")
+    await message.answer(text="Сначала закончите работу с прошлым рерайтом.")
 
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 1), StateFilter(FSMRewrite.rewrote))
-async def process_save(callback: CallbackQuery):
+async def process_save(callback: CallbackQuery):  # Сохранение текста
     if not (await check_text(callback.from_user.id, callback.message.text)):
         await insert_rewritten_text(callback.from_user.id, callback.message.text)
         await callback.answer("Успешно сохранено")
-        logger.info("Текст пользователя сохранен.")
+        logger.info("Рерайт пользователя сохранен.")
     else:
-        await callback.answer("Такая перепись уже есть")
-
+        await callback.answer("Такой рерайт уже есть")
 
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 2), StateFilter(FSMRewrite.rewrote))
-async def process_re_rewrite(callback: CallbackQuery, giga_key, state: FSMContext):
+async def process_re_rewrite(callback: CallbackQuery, giga_key, state: FSMContext):  # Обработка недопустимого сообщения
     res = await ask((await state.get_data())["message"], giga_key)
     if res in BAD_LEXICON:
         await state.clear()
@@ -77,7 +76,8 @@ async def process_re_rewrite(callback: CallbackQuery, giga_key, state: FSMContex
 
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 3), StateFilter(FSMRewrite.rewrote))
-async def process_new_rewrite(callback: CallbackQuery, state: FSMContext):
+async def process_new_rewrite(callback: CallbackQuery,
+                              state: FSMContext):  # Обработка завершения работы с текушим рерайтом
     await callback.message.edit_reply_markup(None)
     await state.clear()
     await state.set_state(FSMRewrite.rewriting)
@@ -87,7 +87,7 @@ async def process_new_rewrite(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 4), StateFilter(FSMRewrite.rewrote))
-async def process_left_variant(callback: CallbackQuery, state: FSMContext):
+async def process_left_variant(callback: CallbackQuery, state: FSMContext):  # Обработка стрелки влево
     variants = (await state.get_data())["answers"]
     curr_var = (await state.get_data())["variant"]
     await state.update_data({"variant": curr_var - 1})
@@ -101,7 +101,7 @@ async def process_left_variant(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 5), StateFilter(FSMRewrite.rewrote))
-async def process_right_variant(callback: CallbackQuery, state: FSMContext):
+async def process_right_variant(callback: CallbackQuery, state: FSMContext):  # Обработка стрелки вправо
     variants = (await state.get_data())["answers"]
     curr_var = (await state.get_data())["variant"]
     await state.update_data({"variant": curr_var + 1})
@@ -114,7 +114,7 @@ async def process_right_variant(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(RewrittenCallbackFactory.filter(F.next_move == 0), StateFilter(FSMRewrite.rewrote))
-async def process_cancel(callback: CallbackQuery, state: FSMContext):
+async def process_cancel(callback: CallbackQuery, state: FSMContext):  # Обработка кнопки выхода из рерайтинга
     await callback.message.edit_reply_markup(None)
     await state.clear()
     await callback.message.answer(text=LEXICON["greeting"], reply_markup=keyboard)

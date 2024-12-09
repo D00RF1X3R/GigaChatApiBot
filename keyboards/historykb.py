@@ -27,6 +27,7 @@ button_remove = InlineKeyboardButton(
     callback_data=HistoryCallbackFactory(next_move=3).pack()
 )
 
+# Клавиатура для страницы истории
 left_inline_kb = InlineKeyboardMarkup(inline_keyboard=[[button_left], [button_remove, button_back]])
 right_inline_kb = InlineKeyboardMarkup(inline_keyboard=[[button_right], [button_remove, button_back]])
 double_inline_kb = InlineKeyboardMarkup(inline_keyboard=[[button_left, button_right], [button_remove, button_back]])
